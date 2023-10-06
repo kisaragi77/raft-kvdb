@@ -1,3 +1,3 @@
-module 6.5840
+module course
 
 go 1.15
