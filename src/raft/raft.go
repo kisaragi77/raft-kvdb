@@ -24,7 +24,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	//	"6.5840/labgob"
+	//	"course/labgob"
 	"course/labrpc"
 )
 
