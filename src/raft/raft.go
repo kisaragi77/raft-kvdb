@@ -49,6 +49,14 @@ type ApplyMsg struct {
 	SnapshotIndex int
 }
 
+type Role string //Define roles
+
+const (
+	Follower  Role = "Follower"
+	Leader    Role = "Leader"
+	Candidate Role = "Candidate"
+)
+
 // A Go object implementing a single Raft peer.
 type Raft struct {
 	mu        sync.Mutex          // Lock to protect shared access to this peer's state
@@ -61,6 +69,13 @@ type Raft struct {
 	// Look at the paper's Figure 2 for a description of what
 	// state a Raft server must maintain.
 
+	role        Role
+	currentTerm int
+	votedFor    int
+
+	//used for election loop
+	electionStart   time.Time
+	electionTimeout time.Duration //选举时间上限
 }
 
 // return currentTerm and whether this server
@@ -70,7 +85,64 @@ func (rf *Raft) GetState() (int, bool) {
 	var term int
 	var isleader bool
 	// Your code here (PartA).
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
 	return term, isleader
+}
+
+// 三种身份切换的辅助函数(需要先上锁再调用)
+
+func (rf *Raft) becomeFollowerLocked() {
+	rf.role = Follower
+}
+
+func (rf *Raft) becomeCandidateLocked() {
+	// 合法性检查(身份/任期)
+	if rf.role == Leader {
+		LOG(rf.me, rf.currentTerm, DError, "Leader can't become Candidate")
+		return
+	}
+	LOG(rf.me, rf.currentTerm, DVote, "%s -> Candidate, For T%d->T%d", rf.role, rf.currentTerm, rf.currentTerm+1)
+	rf.currentTerm++
+	rf.role = Candidate
+	rf.votedFor = rf.me
+}
+
+func (rf *Raft) becomeLeaderLocked() {
+	if rf.role != Candidate {
+		LOG(rf.me, rf.currentTerm, DLeader, "%s, Only candidate can become Leader", rf.role)
+		return
+	}
+	LOG(rf.me, rf.currentTerm, DLeader, "%s -> Leader, For T%d", rf.role, rf.currentTerm)
+
+	rf.role = Leader
+}
+
+//选举逻辑
+
+const (
+	electionTimeoutMin time.Duration = 250 * time.Millisecond
+	electionTimeoutMax time.Duration = 400 * time.Millisecond
+)
+
+func (rf *Raft) resetElectionTimeoutLocked() {
+	// rf.currentTerm++
+	rf.electionStart = time.Now()
+	randRange := int64(electionTimeoutMax - electionTimeoutMin)
+	rf.electionTimeout = electionTimeoutMin + time.Duration(rand.Int63()%randRange)
+}
+
+func (rf *Raft) isElectionTimeoutLocked() bool {
+	return time.Since(rf.electionStart) > rf.electionTimeout
+
+}
+
+// func ()  {
+
+// }
+
+func (rf *Raft) startElectionLocked(term int) bool {
+
 }
 
 // save Raft's persistent state to stable storage,
@@ -124,6 +196,7 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 // field names must start with capital letters!
 type RequestVoteArgs struct {
 	// Your data here (PartA, PartB).
+	Term int
 }
 
 // example RequestVote RPC reply structure.
@@ -210,12 +283,16 @@ func (rf *Raft) killed() bool {
 	return z == 1
 }
 
-func (rf *Raft) ticker() {
+func (rf *Raft) ticker() { //Follower开始选举的ticker
 	for rf.killed() == false {
-
 		// Your code here (PartA)
 		// Check if a leader election should be started.
-
+		rf.mu.Lock()
+		if rf.role != Leader && rf.isElectionTimeoutLocked() {
+			rf.becomeCandidateLocked()
+			go rf.startElectionLocked(rf.currentTerm)
+		}
+		rf.mu.Unlock()
 		// pause for a random amount of time between 50 and 350
 		// milliseconds.
 		ms := 50 + (rand.Int63() % 300)
