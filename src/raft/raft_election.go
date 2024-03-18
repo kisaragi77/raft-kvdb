@@ -5,7 +5,11 @@ import (
 	"time"
 )
 
-//选举逻辑
+// 选举逻辑
+const (
+	electionTimeoutMin time.Duration = 250 * time.Millisecond
+	electionTimeoutMax time.Duration = 400 * time.Millisecond
+)
 
 type RequestVoteArgs struct {
 	// Your data here (PartA, PartB).

@@ -57,13 +57,6 @@ const (
 	Candidate Role = "Candidate"
 )
 
-const (
-	electionTimeoutMin time.Duration = 250 * time.Millisecond
-	electionTimeoutMax time.Duration = 400 * time.Millisecond
-
-	replicateInterval time.Duration = 200 * time.Millisecond
-)
-
 // A Go object implementing a single Raft peer.
 type Raft struct {
 	mu        sync.Mutex          // Lock to protect shared access to this peer's state
@@ -83,6 +76,11 @@ type Raft struct {
 	//used for election loop
 	electionStart   time.Time
 	electionTimeout time.Duration //选举时间上限
+
+	//used for logs
+	log        []LogEntry
+	nextIndex  []int
+	matchIndex []int
 }
 
 // return currentTerm and whether this server
@@ -306,7 +304,9 @@ func Make(peers []*labrpc.ClientEnd, me int,
 
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
-
+	rf.log = append(rf.log, LogEntry{})
+	rf.matchIndex = make([]int, len(rf.peers))
+	rf.nextIndex = make([]int, len(rf.peers))
 	// start ticker goroutine to start elections
 	go rf.electionTicker()
 

@@ -1,12 +1,27 @@
 package raft
 
-import "time"
+import (
+	"time"
+)
+
+const (
+	replicateInterval time.Duration = 200 * time.Millisecond
+)
+
+type LogEntry struct {
+	Term         int
+	CommandValid bool
+	Command      interface{}
+}
 
 type AppendEntriesArgs struct {
 	Term     int
 	LeaderId int
-}
 
+	PrevLogIndex int
+	PrevLogTerm  int
+	Entries      []LogEntry
+}
 type AppendEntriesReply struct {
 	Term    int
 	Success bool
@@ -21,6 +36,9 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 
+	//DEBUG
+	LOG(rf.me, rf.currentTerm, DDebug, "<- S%d, Receive log, Prev=[%d]T%d, Len()=%d", args.LeaderId, args.PrevLogIndex, args.PrevLogTerm, len(args.Entries))
+
 	reply.Term = rf.currentTerm
 	if rf.currentTerm > args.Term {
 		LOG(rf.me, rf.currentTerm, DLog2, "<- S%d, Reject log", args.LeaderId)
@@ -31,6 +49,22 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	if args.Term >= rf.currentTerm {
 		rf.becomeFollowerLocked(args.Term)
 	}
+
+	if args.PrevLogIndex >= len(rf.log) {
+		LOG(rf.me, rf.currentTerm, DLog2, "<- S%d, Reject Log, Follower log too short, Len:%d <= Prev:%d", args.LeaderId, len(rf.log), args.PrevLogIndex)
+		reply.Success = false
+		return
+	}
+
+	if rf.log[args.PrevLogIndex].Term != args.PrevLogTerm {
+		LOG(rf.me, rf.currentTerm, DLog2, "<- S%d, Reject Log, Prev log not match, [%d]: T%d != T%d", args.LeaderId, args.PrevLogIndex, rf.log[args.PrevLogIndex].Term, args.PrevLogTerm)
+		reply.Success = false
+		return
+	}
+
+	rf.log = append(rf.log[:args.PrevLogIndex+1], args.Entries...)
+	LOG(rf.me, rf.currentTerm, DLog2, "Follower append logs: (%d, %d]", args.PrevLogIndex, args.PrevLogIndex+len(args.Entries))
+
 	reply.Success = true
 	rf.resetElectionTimeoutLocked()
 }
