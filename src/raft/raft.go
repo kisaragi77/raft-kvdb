@@ -131,6 +131,11 @@ func (rf *Raft) becomeLeaderLocked() {
 	LOG(rf.me, rf.currentTerm, DLeader, "%s -> Leader, For T%d", rf.role, rf.currentTerm)
 
 	rf.role = Leader
+
+	for peer := 0; peer < len(rf.peers); peer++ {
+		rf.nextIndex[peer] = len(rf.log)
+		rf.matchIndex[peer] = 0
+	}
 }
 
 //选举逻辑

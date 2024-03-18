@@ -15,6 +15,9 @@ type RequestVoteArgs struct {
 	// Your data here (PartA, PartB).
 	Term        int
 	CandidateId int
+
+	lastLogIndex int
+	lastLogTerm  int
 }
 
 // example RequestVote RPC reply structure.
@@ -72,15 +75,17 @@ func (rf *Raft) startElection(term int) bool {
 	if rf.contextLostLocked(Candidate, term) {
 		return false
 	}
-
+	n := len(rf.log)
 	for peer := 0; peer < len(rf.peers); peer++ {
 		if peer == rf.me {
 			votes++
 			continue
 		}
 		args := &RequestVoteArgs{
-			Term:        term,
-			CandidateId: rf.me,
+			Term:         term,
+			CandidateId:  rf.me,
+			lastLogIndex: n - 1,
+			lastLogTerm:  rf.log[n-1].Term,
 		}
 
 		go askVoteFromPeer(peer, args) //非临界区调用
@@ -107,6 +112,12 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 
 	if rf.votedFor != -1 && rf.votedFor != args.CandidateId { //
 		LOG(rf.me, rf.currentTerm, DVote, "-> S%d, Reject, Already voted S%d", args.CandidateId, rf.votedFor)
+		reply.VoteGranted = false
+		return
+	}
+
+	if rf.isMoreUpToDateLocked(args.lastLogIndex, args.lastLogTerm) {
+		LOG(rf.me, rf.currentTerm, DVote, "-> S%d, Reject Vote, S%d's log less up-to-date", args.CandidateId)
 		reply.VoteGranted = false
 		return
 	}

@@ -84,6 +84,11 @@ func (rf *Raft) startReplication(term int) bool { //心跳/日志同步
 			rf.becomeFollowerLocked(reply.Term)
 			return
 		}
+
+		if !reply.Success {
+			//日志一致性检查失败:定位第一个合法的位置
+			// idx := r
+		}
 	}
 
 	rf.mu.Lock()
@@ -121,4 +126,15 @@ func (rf *Raft) replicationTicker(term int) { // 日志同步Ticker的生命周�
 
 		time.Sleep(replicateInterval)
 	}
+}
+
+func (rf *Raft) isMoreUpToDateLocked(candidateIndex int, candidateTerm int) bool {
+	n := len(rf.log)
+	lastLogTerm, lastLogIndex := rf.log[n-1].Term, n-1
+
+	if lastLogTerm != candidateTerm {
+		return lastLogTerm > candidateTerm
+	}
+
+	return lastLogIndex > candidateIndex
 }
