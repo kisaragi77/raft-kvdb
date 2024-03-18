@@ -139,10 +139,31 @@ func (rf *Raft) isElectionTimeoutLocked() bool {
 
 // func ()  {
 
-// }
+func (rf *Raft) contextLostLocked(role Role, term int) bool {
+	return rf.currentTerm != term || rf.role != role
+}
 
-func (rf *Raft) startElectionLocked(term int) bool {
+func (rf *Raft) startElection(term int) bool {
+	votes := 0
 
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	if rf.contextLostLocked(Candidate, term) {
+		return false
+	}
+
+	for peer := 0; peer < len(rf.peers); peer++ {
+		if peer == rf.me {
+			votes++
+			continue
+		}
+		args := RequestVoteArgs{
+			Term:        term,
+			CandidateId: rf.me,
+		}
+
+		go askVoteFromPeer(peer, args)
+	}
 }
 
 // save Raft's persistent state to stable storage,
@@ -196,13 +217,16 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 // field names must start with capital letters!
 type RequestVoteArgs struct {
 	// Your data here (PartA, PartB).
-	Term int
+	Term        int
+	CandidateId int
 }
 
 // example RequestVote RPC reply structure.
 // field names must start with capital letters!
 type RequestVoteReply struct {
 	// Your data here (PartA).
+	Term      int
+	VoteGrant int
 }
 
 // example RequestVote RPC handler.
