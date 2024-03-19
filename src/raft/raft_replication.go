@@ -21,6 +21,7 @@ type AppendEntriesArgs struct {
 	PrevLogIndex int
 	PrevLogTerm  int
 	Entries      []LogEntry
+	LeaderCommit int
 }
 type AppendEntriesReply struct {
 	Term    int
@@ -86,9 +87,21 @@ func (rf *Raft) startReplication(term int) bool { //心跳/日志同步
 		}
 
 		if !reply.Success {
-			//日志一致性检查失败:定位第一个合法的位置
-			// idx := r
+			//日志一致性检查失败:定位第一个合法的位置?
+			idx := rf.nextIndex[peer] - 1
+			term := rf.log[idx].Term
+			for idx>0&&rf.log[idx].Term==term{
+				idx--
+			}
+			rf.nextIndex[peer] = idx+1
+			//LOG TODO
+			return
 		}
+
+		rf.matchIndex[peer] = args.PrevLogIndex + len(args.Entries)
+		rf.nextIndex[peer] = rf.matchIndex[peer] + 1
+		//TODO : commit ID
+
 	}
 
 	rf.mu.Lock()
@@ -101,12 +114,23 @@ func (rf *Raft) startReplication(term int) bool { //心跳/日志同步
 
 	for peer := 0; peer < len(rf.peers); peer++ {
 		if peer == rf.me {
+			rf.matchIndex[peer] = len(rf.log) - 1
+			rf.nextIndex[peer] = len(rf.log)
 			continue
 		}
+
+		prevIdx := rf.nextIndex[peer] - 1 // 最后一条日志
+		prevTerm := rf.log[prevIdx].Term
+
+
 
 		args := &AppendEntriesArgs{
 			Term:     term,
 			LeaderId: rf.me,
+			PrevLogIndex:  prevIdx,
+			PrevLogTerm: prevTerm,
+			Entries: append([]LogEntry(nil),rf.log[prevIdx+1:]...),
+			LeaderCommit: rf.commitIndex,
 		}
 
 		go replicateToPeer(peer, args)

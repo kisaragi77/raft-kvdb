@@ -79,8 +79,14 @@ type Raft struct {
 
 	//used for logs
 	log        []LogEntry
+	//Leader
 	nextIndex  []int
 	matchIndex []int
+	//log commit
+	commitIndex int 
+	lastApplied int
+	applyCond *sync.Cond
+	applyCh chan ApplyMsg
 }
 
 // return currentTerm and whether this server
