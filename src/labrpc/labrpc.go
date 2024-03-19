@@ -420,7 +420,7 @@ func (rs *Server) dispatch(req reqMsg) replyMsg {
 		return service.dispatch(methodName, req)
 	} else {
 		choices := []string{}
-		for k, _ := range rs.services {
+		for k := range rs.services {
 			choices = append(choices, k)
 		}
 		log.Fatalf("labrpc.Server.dispatch(): unknown service %v in %v.%v; expecting one of %v\n",
