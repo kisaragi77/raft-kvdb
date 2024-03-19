@@ -16,8 +16,8 @@ type RequestVoteArgs struct {
 	Term        int
 	CandidateId int
 
-	lastLogIndex int
-	lastLogTerm  int
+	LastLogIndex int
+	LastLogTerm  int
 }
 
 // example RequestVote RPC reply structure.
@@ -43,6 +43,7 @@ func (rf *Raft) isElectionTimeoutLocked() bool {
 func (rf *Raft) startElection(term int) bool {
 	votes := 0
 	askVoteFromPeer := func(peer int, args *RequestVoteArgs) {
+		//send rpc
 		reply := &RequestVoteReply{}
 		ok := rf.sendRequestVote(peer, args, reply)
 
@@ -57,6 +58,12 @@ func (rf *Raft) startElection(term int) bool {
 		//对齐任期
 		if reply.Term > rf.currentTerm {
 			rf.becomeFollowerLocked(reply.Term)
+			return
+		}
+
+		//check context
+		if rf.contextLostLocked(Candidate, term) {
+			LOG(rf.me, rf.currentTerm, DVote, "Lost context, abort RequestVoteReply in T%d", rf.currentTerm)
 			return
 		}
 
@@ -75,19 +82,19 @@ func (rf *Raft) startElection(term int) bool {
 	if rf.contextLostLocked(Candidate, term) {
 		return false
 	}
-	n := len(rf.log)
+	l := len(rf.log)
 	for peer := 0; peer < len(rf.peers); peer++ {
 		if peer == rf.me {
 			votes++
 			continue
 		}
 		args := &RequestVoteArgs{
-			Term:         term,
+			Term:         rf.currentTerm,
 			CandidateId:  rf.me,
-			lastLogIndex: n - 1,
-			lastLogTerm:  rf.log[n-1].Term,
+			LastLogIndex: l - 1,
+			LastLogTerm:  rf.log[l-1].Term,
 		}
-
+		LOG(rf.me, rf.currentTerm, DVote, "Send vote RPC to %d:T%d Idx:%d LT:%d", peer, args.Term, args.LastLogIndex, args.LastLogTerm)
 		go askVoteFromPeer(peer, args) //非临界区调用
 	}
 	return true
@@ -98,6 +105,8 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	// Your code here (PartA, PartB).
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
+
+	LOG(rf.me, rf.currentTerm, DVote, "Receive vote RPC from %d:T%d Idx:%d LT:%d", args.CandidateId, args.Term, args.LastLogIndex, args.LastLogTerm)
 
 	reply.Term = rf.currentTerm
 	if rf.currentTerm > args.Term {
@@ -116,8 +125,8 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 		return
 	}
 
-	if rf.isMoreUpToDateLocked(args.lastLogIndex, args.lastLogTerm) {
-		LOG(rf.me, rf.currentTerm, DVote, "-> S%d, Reject Vote, S%d's log less up-to-date", args.CandidateId)
+	if rf.isMoreUpToDateLocked(args.LastLogIndex, args.LastLogTerm) {
+		LOG(rf.me, rf.currentTerm, DVote, "-> S%d, Reject Vote, S%d's log less up-to-date", args.CandidateId, args.CandidateId)
 		reply.VoteGranted = false
 		return
 	}

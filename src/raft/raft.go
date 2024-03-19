@@ -34,20 +34,6 @@ import (
 // CommandValid to true to indicate that the ApplyMsg contains a newly
 // committed log entry.
 //
-// in part PartD you'll want to send other kinds of messages (e.g.,
-// snapshots) on the applyCh, but set CommandValid to false for these
-// other uses.
-type ApplyMsg struct {
-	CommandValid bool
-	Command      interface{}
-	CommandIndex int
-
-	// For PartD:
-	SnapshotValid bool
-	Snapshot      []byte
-	SnapshotTerm  int
-	SnapshotIndex int
-}
 
 type Role string //Define roles
 
@@ -78,29 +64,29 @@ type Raft struct {
 	electionTimeout time.Duration //选举时间上限
 
 	//used for logs
-	log        []LogEntry
+	log []LogEntry
 	//Leader
 	nextIndex  []int
 	matchIndex []int
+
 	//log commit
-	commitIndex int 
+	commitIndex int
 	lastApplied int
-	applyCond *sync.Cond
-	applyCh chan ApplyMsg
+	applyCond   *sync.Cond
+	applyCh     chan ApplyMsg
 }
 
 // return currentTerm and whether this server
 // believes it is the leader.
+
+// return term, isleader
 func (rf *Raft) GetState() (int, bool) {
 
-	var term int
-	var isleader bool
 	// Your code here (PartA).
-	// rf.mu.Lock()
-	// defer rf.mu.Unlock()
-	term = rf.currentTerm
-	isleader = rf.role == Leader
-	return term, isleader
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	return rf.currentTerm, rf.role == Leader
+
 }
 
 // 三种身份切换的辅助函数(需要先上锁再调用)
@@ -109,10 +95,12 @@ func (rf *Raft) becomeFollowerLocked(term int) {
 	if term < rf.currentTerm {
 		LOG(rf.me, rf.currentTerm, DError, "Can't become Follower, lower term")
 		return
-	} else if term > rf.currentTerm {
-		rf.votedFor = -1
 	}
 	LOG(rf.me, rf.currentTerm, DLog, "%s -> Follower, For T%d->T%d", rf.role, rf.currentTerm, term)
+	if term > rf.currentTerm {
+		rf.votedFor = -1
+	}
+
 	rf.role = Follower
 	rf.currentTerm = term
 }
@@ -149,7 +137,7 @@ func (rf *Raft) becomeLeaderLocked() {
 // func ()  {
 
 func (rf *Raft) contextLostLocked(role Role, term int) bool {
-	return rf.currentTerm != term || rf.role != role
+	return !(rf.currentTerm == term && rf.role == role)
 }
 
 // save Raft's persistent state to stable storage,
@@ -242,14 +230,24 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 // if it's ever committed. the second return value is the current
 // term. the third return value is true if this server believes it is
 // the leader.
+
+// Return index, term, isLeader
 func (rf *Raft) Start(command interface{}) (int, int, bool) {
-	index := -1
-	term := -1
-	isLeader := true
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
 
 	// Your code here (PartB).
 
-	return index, term, isLeader
+	if rf.role != Leader {
+		return 0, 0, false
+	}
+	rf.log = append(rf.log, LogEntry{
+		CommandValid: true,
+		Term:         rf.currentTerm,
+		Command:      command,
+	})
+	LOG(rf.me, rf.currentTerm, DLeader, "Leader accept log [%d]T%d", len(rf.log)-1, rf.currentTerm)
+	return len(rf.log) - 1, rf.currentTerm, true
 }
 
 // the tester doesn't halt goroutines created by Raft after each test,
@@ -269,30 +267,6 @@ func (rf *Raft) Kill() {
 func (rf *Raft) killed() bool {
 	z := atomic.LoadInt32(&rf.dead)
 	return z == 1
-}
-
-func (rf *Raft) applicationTicker() {
-	// for !rf.killed() {
-	// 	rf.mu.Lock()
-	// 	rf.applyCond.Wait()
-	// 	entries := make([]LogEntry, 0)
-	// 	for i := rf.lastApplied + 1; i <= rf.commitIndex; i++ {
-	// 		entries = append(entries, rf.log[i])
-	// 	}
-	// 	rf.mu.Unlock()
-
-	// 	for i, entry := range entries {
-	// 		rf.applyCh <- ApplyMsg{
-	// 			CommandValid: entry.CommandValid,
-	// 			Command:      entry.Command,
-	// 			CommandIndex: rf.lastApplied + 1 + i, // must be cautious
-	// 		}
-	// 	}
-
-	// 	rf.mu.Lock()
-	// 	rf.lastApplied += len(entries)
-	// 	rf.mu.Unlock()
-	// }
 }
 
 // the service or tester wants to create a Raft server. the ports
@@ -318,8 +292,14 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.log = append(rf.log, LogEntry{})
 	rf.matchIndex = make([]int, len(rf.peers))
 	rf.nextIndex = make([]int, len(rf.peers))
+
+	rf.applyCh = applyCh
+	rf.commitIndex = 0
+	rf.lastApplied = 0
+	rf.applyCond = sync.NewCond(&rf.mu)
 	// start ticker goroutine to start elections
 	go rf.electionTicker()
+	go rf.applicationTicker()
 
 	return rf
 }

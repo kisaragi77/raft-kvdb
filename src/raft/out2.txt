@@ -1,0 +1,152 @@
+000001 T0000 VOTE S0  -> Candidate, For T0->T1
+labgob error: lower-case field lastLogIndex of RequestVoteArgs in RPC or persist/snapshot will break your Raft
+labgob error: lower-case field lastLogTerm of RequestVoteArgs in RPC or persist/snapshot will break your Raft
+Test (PartB): basic agreement ...
+000004 T0000 VOTE S1  -> Candidate, For T0->T1
+000005 T0000 VOTE S2  -> Candidate, For T0->T1
+000006 T0001 VOTE S2 -> S0, Reject, Already voted S2
+000007 T0001 VOTE S0 -> S1, Reject, Already voted S0
+000007 T0001 VOTE S1 -> S2, Reject, Already voted S1
+000008 T0001 VOTE S1 -> S0, Reject, Already voted S1
+000008 T0001 VOTE S2 -> S1, Reject, Already voted S2
+000009 T0001 VOTE S0 -> S2, Reject, Already voted S0
+000985 T0001 VOTE S0 Candidate -> Candidate, For T1->T2
+000988 T0001 LOG1 S1 Candidate -> Follower, For T1->T2
+000988 T0001 LOG1 S2 Candidate -> Follower, For T1->T2
+000988 T0002 VOTE S1 -> S0
+000988 T0002 VOTE S2 -> S0
+000989 T0002 LEAD S0 Candidate -> Leader, For T2
+000989 T0002 LEAD S0 Leader, Only candidate can become Leader
+000992 T0002 DBUG S2 <- S0, Receive log, Prev=[0]T0, Len()=0
+000992 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+000992 T0002 LOG2 S2 Follower append logs: (0, 0]
+000993 T0002 DBUG S1 <- S0, Receive log, Prev=[0]T0, Len()=0
+000993 T0002 LOG1 S1 Follower -> Follower, For T2->T2
+000993 T0002 LOG2 S1 Follower append logs: (0, 0]
+000993 T0002 DBUG S0 Match index after sort :[0 0 0] ,majority[1]=0
+000993 T0002 DBUG S2 <- S0, Receive log, Prev=[0]T0, Len()=0
+000993 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+000993 T0002 LOG2 S2 Follower append logs: (0, 0]
+000994 T0002 DBUG S0 Match index after sort :[0 0 0] ,majority[1]=0
+000994 T0002 DBUG S0 Match index after sort :[0 0 0] ,majority[1]=0
+000995 T0002 DBUG S1 <- S0, Receive log, Prev=[0]T0, Len()=0
+000995 T0002 LOG1 S1 Follower -> Follower, For T2->T2
+000995 T0002 LOG2 S1 Follower append logs: (0, 0]
+000996 T0002 DBUG S0 Match index after sort :[0 0 0] ,majority[1]=0
+001017 T0002 LEAD S0 Leader accept log [1]T2
+002998 T0002 DBUG S1 <- S0, Receive log, Prev=[0]T0, Len()=1
+002998 T0002 LOG1 S1 Follower -> Follower, For T2->T2
+002998 T0002 LOG2 S1 Follower append logs: (0, 1]
+002998 T0002 DBUG S2 <- S0, Receive log, Prev=[0]T0, Len()=1
+002999 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+002999 T0002 LOG2 S2 Follower append logs: (0, 1]
+002999 T0002 DBUG S0 Match index after sort :[0 1 1] ,majority[1]=1
+003000 T0002 APLY S0 Apply log for [1,1]
+003001 T0002 DBUG S0 Match index after sort :[1 1 1] ,majority[1]=1
+002999 T0002 DBUG S1 <- S0, Receive log, Prev=[0]T0, Len()=1
+003001 T0002 LOG1 S1 Follower -> Follower, For T2->T2
+003001 T0002 LOG2 S1 Follower append logs: (0, 1]
+003000 T0002 DBUG S2 <- S0, Receive log, Prev=[0]T0, Len()=1
+003002 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+003002 T0002 LOG2 S2 Follower append logs: (0, 1]
+003003 T0002 DBUG S0 Match index after sort :[1 1 1] ,majority[1]=1
+003004 T0002 DBUG S0 Match index after sort :[1 1 1] ,majority[1]=1
+005000 T0002 DBUG S2 <- S0, Receive log, Prev=[1]T2, Len()=0
+005000 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+005000 T0002 LOG2 S2 Follower append logs: (1, 1]
+005000 T0002 APLY S2 Follower update the commit index 0->1
+005000 T0002 DBUG S1 <- S0, Receive log, Prev=[1]T2, Len()=0
+005001 T0002 APLY S2 Apply log for [1,1]
+005001 T0002 LOG1 S1 Follower -> Follower, For T2->T2
+005001 T0002 LOG2 S1 Follower append logs: (1, 1]
+005001 T0002 APLY S1 Follower update the commit index 0->1
+005002 T0002 DBUG S2 <- S0, Receive log, Prev=[1]T2, Len()=0
+005002 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+005002 T0002 LOG2 S2 Follower append logs: (1, 1]
+005002 T0002 APLY S1 Apply log for [1,1]
+005003 T0002 DBUG S1 <- S0, Receive log, Prev=[1]T2, Len()=0
+005003 T0002 LOG1 S1 Follower -> Follower, For T2->T2
+005003 T0002 LOG2 S1 Follower append logs: (1, 1]
+005002 T0002 DBUG S0 Match index after sort :[1 1 1] ,majority[1]=1
+005003 T0002 DBUG S0 Match index after sort :[1 1 1] ,majority[1]=1
+005003 T0002 DBUG S0 Match index after sort :[1 1 1] ,majority[1]=1
+005004 T0002 DBUG S0 Match index after sort :[1 1 1] ,majority[1]=1
+005110 T0002 LEAD S0 Leader accept log [2]T2
+007002 T0002 DBUG S2 <- S0, Receive log, Prev=[1]T2, Len()=1
+007002 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+007002 T0002 LOG2 S2 Follower append logs: (1, 2]
+007002 T0002 DBUG S1 <- S0, Receive log, Prev=[1]T2, Len()=1
+007003 T0002 LOG1 S1 Follower -> Follower, For T2->T2
+007003 T0002 LOG2 S1 Follower append logs: (1, 2]
+007004 T0002 DBUG S0 Match index after sort :[1 2 2] ,majority[1]=2
+007004 T0002 DBUG S0 Match index after sort :[2 2 2] ,majority[1]=2
+007005 T0002 APLY S0 Apply log for [2,2]
+007004 T0002 DBUG S1 <- S0, Receive log, Prev=[1]T2, Len()=1
+007006 T0002 LOG1 S1 Follower -> Follower, For T2->T2
+007006 T0002 LOG2 S1 Follower append logs: (1, 2]
+007004 T0002 DBUG S2 <- S0, Receive log, Prev=[1]T2, Len()=1
+007008 T0002 DBUG S0 Match index after sort :[2 2 2] ,majority[1]=2
+007008 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+007008 T0002 LOG2 S2 Follower append logs: (1, 2]
+007009 T0002 DBUG S0 Match index after sort :[2 2 2] ,majority[1]=2
+009010 T0002 DBUG S1 <- S0, Receive log, Prev=[2]T2, Len()=0
+009010 T0002 LOG1 S1 Follower -> Follower, For T2->T2
+009010 T0002 DBUG S2 <- S0, Receive log, Prev=[2]T2, Len()=0
+009010 T0002 LOG2 S1 Follower append logs: (2, 2]
+009010 T0002 APLY S1 Follower update the commit index 1->2
+009010 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+009010 T0002 LOG2 S2 Follower append logs: (2, 2]
+009010 T0002 APLY S2 Follower update the commit index 1->2
+009011 T0002 APLY S1 Apply log for [2,2]
+009011 T0002 APLY S2 Apply log for [2,2]
+009011 T0002 DBUG S1 <- S0, Receive log, Prev=[2]T2, Len()=0
+009011 T0002 LOG1 S1 Follower -> Follower, For T2->T2
+009011 T0002 LOG2 S1 Follower append logs: (2, 2]
+009011 T0002 DBUG S0 Match index after sort :[2 2 2] ,majority[1]=2
+009011 T0002 DBUG S2 <- S0, Receive log, Prev=[2]T2, Len()=0
+009011 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+009011 T0002 LOG2 S2 Follower append logs: (2, 2]
+009011 T0002 DBUG S0 Match index after sort :[2 2 2] ,majority[1]=2
+009012 T0002 DBUG S0 Match index after sort :[2 2 2] ,majority[1]=2
+009012 T0002 DBUG S0 Match index after sort :[2 2 2] ,majority[1]=2
+009211 T0002 LEAD S0 Leader accept log [3]T2
+011020 T0002 DBUG S2 <- S0, Receive log, Prev=[2]T2, Len()=1
+011021 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+011021 T0002 LOG2 S2 Follower append logs: (2, 3]
+011021 T0002 DBUG S1 <- S0, Receive log, Prev=[2]T2, Len()=1
+011021 T0002 LOG1 S1 Follower -> Follower, For T2->T2
+011021 T0002 LOG2 S1 Follower append logs: (2, 3]
+011021 T0002 DBUG S2 <- S0, Receive log, Prev=[2]T2, Len()=1
+011022 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+011022 T0002 LOG2 S2 Follower append logs: (2, 3]
+011022 T0002 DBUG S1 <- S0, Receive log, Prev=[2]T2, Len()=1
+011022 T0002 LOG1 S1 Follower -> Follower, For T2->T2
+011022 T0002 LOG2 S1 Follower append logs: (2, 3]
+011022 T0002 DBUG S0 Match index after sort :[2 3 3] ,majority[1]=3
+011023 T0002 DBUG S0 Match index after sort :[3 3 3] ,majority[1]=3
+011023 T0002 DBUG S0 Match index after sort :[3 3 3] ,majority[1]=3
+011023 T0002 APLY S0 Apply log for [3,3]
+011024 T0002 DBUG S0 Match index after sort :[3 3 3] ,majority[1]=3
+013027 T0002 DBUG S2 <- S0, Receive log, Prev=[3]T2, Len()=0
+013028 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+013028 T0002 LOG2 S2 Follower append logs: (3, 3]
+013028 T0002 APLY S2 Follower update the commit index 2->3
+013028 T0002 APLY S2 Apply log for [3,3]
+013029 T0002 DBUG S2 <- S0, Receive log, Prev=[3]T2, Len()=0
+013029 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+013030 T0002 LOG2 S2 Follower append logs: (3, 3]
+013029 T0002 DBUG S0 Match index after sort :[3 3 3] ,majority[1]=3
+013027 T0002 DBUG S1 <- S0, Receive log, Prev=[3]T2, Len()=0
+013031 T0002 LOG1 S1 Follower -> Follower, For T2->T2
+013031 T0002 LOG2 S1 Follower append logs: (3, 3]
+013031 T0002 APLY S1 Follower update the commit index 2->3
+013031 T0002 DBUG S0 Match index after sort :[3 3 3] ,majority[1]=3
+013032 T0002 APLY S1 Apply log for [3,3]
+013032 T0002 DBUG S1 <- S0, Receive log, Prev=[3]T2, Len()=0
+013032 T0002 LOG1 S1 Follower -> Follower, For T2->T2
+013032 T0002 LOG2 S1 Follower append logs: (3, 3]
+013032 T0002 DBUG S0 Match index after sort :[3 3 3] ,majority[1]=3
+013034 T0002 DBUG S0 Match index after sort :[3 3 3] ,majority[1]=3
+  ... Passed --   1.3  3   36    9076    3
+PASS
+ok  	course/raft	1.311s

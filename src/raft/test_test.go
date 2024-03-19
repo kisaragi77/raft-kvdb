@@ -1,5 +1,8 @@
 package raft
 
+// VERBOSE=0 go test -run BasicAgreePartB | tee out.txt
+// ../tools/dslogs -c 3 out.txt
+
 //
 // Raft tests.
 //

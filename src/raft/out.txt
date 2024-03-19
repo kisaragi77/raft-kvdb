@@ -1,0 +1,279 @@
+000002 T0000 VOTE S0  -> Candidate, For T0->T1
+Test (PartB): test failure of leaders ...
+000004 T0000 VOTE S1  -> Candidate, For T0->T1
+000004 T0000 VOTE S2  -> Candidate, For T0->T1
+000005 T0001 VOTE S2 Send vote RPC to 0:T1 Idx:0 LT:0
+000005 T0001 VOTE S2 Send vote RPC to 1:T1 Idx:0 LT:0
+000005 T0001 VOTE S1 Send vote RPC to 0:T1 Idx:0 LT:0
+000005 T0001 VOTE S1 Send vote RPC to 2:T1 Idx:0 LT:0
+000006 T0001 VOTE S0 Send vote RPC to 1:T1 Idx:0 LT:0
+000006 T0001 VOTE S0 Send vote RPC to 2:T1 Idx:0 LT:0
+000008 T0001 VOTE S0 Receive vote RPC from 2:T1 Idx:0 LT:0
+000008 T0001 VOTE S0 -> S2, Reject, Already voted S0
+000008 T0001 VOTE S1 Receive vote RPC from 0:T1 Idx:0 LT:0
+000008 T0001 VOTE S1 -> S0, Reject, Already voted S1
+000008 T0001 VOTE S1 Receive vote RPC from 2:T1 Idx:0 LT:0
+000008 T0001 VOTE S1 -> S2, Reject, Already voted S1
+000010 T0001 VOTE S2 Receive vote RPC from 1:T1 Idx:0 LT:0
+000010 T0001 VOTE S2 -> S1, Reject, Already voted S2
+000011 T0001 VOTE S0 Receive vote RPC from 1:T1 Idx:0 LT:0
+000012 T0001 VOTE S0 -> S1, Reject, Already voted S0
+000012 T0001 VOTE S2 Receive vote RPC from 0:T1 Idx:0 LT:0
+000012 T0001 VOTE S2 -> S0, Reject, Already voted S2
+001509 T0001 VOTE S1 Candidate -> Candidate, For T1->T2
+001509 T0002 VOTE S1 Send vote RPC to 0:T2 Idx:0 LT:0
+001509 T0002 VOTE S1 Send vote RPC to 2:T2 Idx:0 LT:0
+001511 T0001 VOTE S0 Receive vote RPC from 1:T2 Idx:0 LT:0
+001511 T0001 LOG1 S0 Candidate -> Follower, For T1->T2
+001511 T0002 VOTE S0 Compare last log, Me: [0]T0, Candidate: [0]T0
+001511 T0002 VOTE S0 -> S1
+001511 T0001 VOTE S2 Receive vote RPC from 1:T2 Idx:0 LT:0
+001511 T0001 LOG1 S2 Candidate -> Follower, For T1->T2
+001511 T0002 VOTE S2 Compare last log, Me: [0]T0, Candidate: [0]T0
+001512 T0002 VOTE S2 -> S1
+001512 T0002 LEAD S1 Candidate -> Leader, For T2
+001513 T0002 VOTE S1 Lost context, abort RequestVoteReply in T2
+001515 T0002 DBUG S2 <- S1, Receive log, Prev=[0]T0, Len()=0
+001515 T0002 DBUG S0 <- S1, Receive log, Prev=[0]T0, Len()=0
+001515 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+001515 T0002 LOG1 S0 Follower -> Follower, For T2->T2
+001516 T0002 LOG2 S2 Follower append logs: (0, 0]
+001516 T0002 LOG2 S0 Follower append logs: (0, 0]
+001517 T0002 DBUG S1 Match index after sort :[0 0 0] ,majority[1]=0
+001517 T0002 LEAD S1 Leader accept log [1]T2
+001517 T0002 DBUG S1 Match index after sort :[0 0 0] ,majority[1]=0
+002423 T0002 DBUG S2 <- S1, Receive log, Prev=[0]T0, Len()=1
+002424 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+002423 T0002 DBUG S0 <- S1, Receive log, Prev=[0]T0, Len()=1
+002424 T0002 LOG2 S2 Follower append logs: (0, 1]
+002424 T0002 LOG1 S0 Follower -> Follower, For T2->T2
+002424 T0002 LOG2 S0 Follower append logs: (0, 1]
+002425 T0002 DBUG S1 Match index after sort :[0 1 1] ,majority[1]=1
+002426 T0002 DBUG S1 Match index after sort :[1 1 1] ,majority[1]=1
+002426 T0002 APLY S1 Apply log for [1,1]
+003327 T0002 DBUG S2 <- S1, Receive log, Prev=[1]T2, Len()=0
+003327 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+003327 T0002 LOG2 S2 Follower append logs: (1, 1]
+003327 T0002 APLY S2 Follower update the commit index 0->1
+003328 T0002 DBUG S1 Match index after sort :[1 1 1] ,majority[1]=1
+003329 T0002 DBUG S0 <- S1, Receive log, Prev=[1]T2, Len()=0
+003329 T0002 LOG1 S0 Follower -> Follower, For T2->T2
+003329 T0002 LOG2 S0 Follower append logs: (1, 1]
+003329 T0002 APLY S0 Follower update the commit index 0->1
+003330 T0002 DBUG S1 Match index after sort :[1 1 1] ,majority[1]=1
+003330 T0002 APLY S2 Apply log for [1,1]
+003330 T0002 APLY S0 Apply log for [1,1]
+004237 T0002 DBUG S0 <- S1, Receive log, Prev=[1]T2, Len()=0
+004237 T0002 DBUG S2 <- S1, Receive log, Prev=[1]T2, Len()=0
+004238 T0002 LOG1 S0 Follower -> Follower, For T2->T2
+004238 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+004238 T0002 LOG2 S0 Follower append logs: (1, 1]
+004238 T0002 LOG2 S2 Follower append logs: (1, 1]
+004238 T0002 DBUG S1 Match index after sort :[1 1 1] ,majority[1]=1
+004238 T0002 DBUG S1 Match index after sort :[1 1 1] ,majority[1]=1
+005148 T0002 DBUG S2 <- S1, Receive log, Prev=[1]T2, Len()=0
+005148 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+005148 T0002 LOG2 S2 Follower append logs: (1, 1]
+005148 T0002 DBUG S0 <- S1, Receive log, Prev=[1]T2, Len()=0
+005148 T0002 LOG1 S0 Follower -> Follower, For T2->T2
+005149 T0002 LOG2 S0 Follower append logs: (1, 1]
+005149 T0002 DBUG S1 Match index after sort :[1 1 1] ,majority[1]=1
+005150 T0002 DBUG S1 Match index after sort :[1 1 1] ,majority[1]=1
+006060 T0002 DBUG S2 <- S1, Receive log, Prev=[1]T2, Len()=0
+006060 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+006060 T0002 DBUG S0 <- S1, Receive log, Prev=[1]T2, Len()=0
+006060 T0002 LOG2 S2 Follower append logs: (1, 1]
+006060 T0002 LOG1 S0 Follower -> Follower, For T2->T2
+006060 T0002 LOG2 S0 Follower append logs: (1, 1]
+006062 T0002 DBUG S1 Match index after sort :[1 1 1] ,majority[1]=1
+006062 T0002 DBUG S1 Match index after sort :[1 1 1] ,majority[1]=1
+006967 T0002 DBUG S2 <- S1, Receive log, Prev=[1]T2, Len()=0
+006968 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+006968 T0002 LOG2 S2 Follower append logs: (1, 1]
+006967 T0002 DBUG S0 <- S1, Receive log, Prev=[1]T2, Len()=0
+006969 T0002 LOG1 S0 Follower -> Follower, For T2->T2
+006969 T0002 LOG2 S0 Follower append logs: (1, 1]
+006969 T0002 DBUG S1 Match index after sort :[1 1 1] ,majority[1]=1
+006970 T0002 DBUG S1 Match index after sort :[1 1 1] ,majority[1]=1
+007877 T0002 DBUG S0 <- S1, Receive log, Prev=[1]T2, Len()=0
+007877 T0002 DBUG S2 <- S1, Receive log, Prev=[1]T2, Len()=0
+007877 T0002 LOG1 S0 Follower -> Follower, For T2->T2
+007877 T0002 LOG1 S2 Follower -> Follower, For T2->T2
+007877 T0002 LOG2 S0 Follower append logs: (1, 1]
+007877 T0002 LOG2 S2 Follower append logs: (1, 1]
+007878 T0002 DBUG S1 Match index after sort :[1 1 1] ,majority[1]=1
+007879 T0002 DBUG S1 Match index after sort :[1 1 1] ,majority[1]=1
+011478 T0002 VOTE S0 Follower -> Candidate, For T2->T3
+011478 T0003 VOTE S0 Send vote RPC to 1:T3 Idx:1 LT:2
+011478 T0003 VOTE S0 Send vote RPC to 2:T3 Idx:1 LT:2
+011480 T0002 VOTE S2 Receive vote RPC from 0:T3 Idx:1 LT:2
+011480 T0002 LOG1 S2 Follower -> Follower, For T2->T3
+011480 T0003 VOTE S2 Compare last log, Me: [1]T2, Candidate: [1]T2
+011480 T0003 VOTE S2 -> S0
+011481 T0003 LEAD S0 Candidate -> Leader, For T3
+011483 T0003 DBUG S2 <- S0, Receive log, Prev=[1]T2, Len()=0
+011483 T0003 LOG1 S2 Follower -> Follower, For T3->T3
+011483 T0003 LOG2 S2 Follower append logs: (1, 1]
+011484 T0003 DBUG S0 Match index after sort :[0 1 1] ,majority[1]=1
+011542 T0003 LEAD S0 Leader accept log [2]T3
+012392 T0003 DBUG S2 <- S0, Receive log, Prev=[1]T2, Len()=1
+012392 T0003 LOG1 S2 Follower -> Follower, For T3->T3
+012392 T0003 LOG2 S2 Follower append logs: (1, 2]
+012393 T0003 DBUG S0 Match index after sort :[0 2 2] ,majority[1]=2
+012393 T0003 APLY S0 Apply log for [2,2]
+013291 T0003 DBUG S2 <- S0, Receive log, Prev=[2]T3, Len()=0
+013292 T0003 LOG1 S2 Follower -> Follower, For T3->T3
+013292 T0003 LOG2 S2 Follower append logs: (2, 2]
+013292 T0003 APLY S2 Follower update the commit index 1->2
+013292 T0003 APLY S2 Apply log for [2,2]
+013293 T0003 DBUG S0 Match index after sort :[0 2 2] ,majority[1]=2
+013489 T0002 LOG1 S1 -> S2, Lost or crashed
+014201 T0003 DBUG S2 <- S0, Receive log, Prev=[2]T3, Len()=0
+014201 T0003 LOG1 S2 Follower -> Follower, For T3->T3
+014201 T0003 LOG2 S2 Follower append logs: (2, 2]
+014202 T0003 DBUG S0 Match index after sort :[0 2 2] ,majority[1]=2
+015112 T0003 DBUG S2 <- S0, Receive log, Prev=[2]T3, Len()=0
+015112 T0003 LOG1 S2 Follower -> Follower, For T3->T3
+015112 T0003 LOG2 S2 Follower append logs: (2, 2]
+015112 T0003 DBUG S0 Match index after sort :[0 2 2] ,majority[1]=2
+015762 T0003 LOG1 S0 -> S1, Lost or crashed
+016018 T0003 DBUG S2 <- S0, Receive log, Prev=[2]T3, Len()=0
+016018 T0003 LOG1 S2 Follower -> Follower, For T3->T3
+016018 T0003 LOG2 S2 Follower append logs: (2, 2]
+016019 T0003 DBUG S0 Match index after sort :[0 2 2] ,majority[1]=2
+016927 T0003 DBUG S2 <- S0, Receive log, Prev=[2]T3, Len()=0
+016927 T0003 LOG1 S2 Follower -> Follower, For T3->T3
+016927 T0003 LOG2 S2 Follower append logs: (2, 2]
+016929 T0003 DBUG S0 Match index after sort :[0 2 2] ,majority[1]=2
+017835 T0003 DBUG S2 <- S0, Receive log, Prev=[2]T3, Len()=0
+017835 T0003 LOG1 S2 Follower -> Follower, For T3->T3
+017835 T0003 LOG2 S2 Follower append logs: (2, 2]
+017836 T0003 DBUG S0 Match index after sort :[0 2 2] ,majority[1]=2
+018742 T0003 DBUG S2 <- S0, Receive log, Prev=[2]T3, Len()=0
+018742 T0003 LOG1 S2 Follower -> Follower, For T3->T3
+018742 T0003 LOG2 S2 Follower append logs: (2, 2]
+018743 T0003 DBUG S0 Match index after sort :[0 2 2] ,majority[1]=2
+018858 T0002 LOG1 S1 -> S2, Lost or crashed
+019648 T0003 DBUG S2 <- S0, Receive log, Prev=[2]T3, Len()=0
+019648 T0003 LOG1 S2 Follower -> Follower, For T3->T3
+019648 T0003 LOG2 S2 Follower append logs: (2, 2]
+019649 T0003 DBUG S0 Match index after sort :[0 2 2] ,majority[1]=2
+020550 T0003 DBUG S2 <- S0, Receive log, Prev=[2]T3, Len()=0
+020550 T0003 LOG1 S2 Follower -> Follower, For T3->T3
+020550 T0003 LOG2 S2 Follower append logs: (2, 2]
+020552 T0003 DBUG S0 Match index after sort :[0 2 2] ,majority[1]=2
+020603 T0002 LOG1 S1 -> S0, Lost or crashed
+020974 T0002 LOG1 S1 -> S0, Lost or crashed
+021016 T0003 LOG1 S0 -> S1, Lost or crashed
+021453 T0003 DBUG S2 <- S0, Receive log, Prev=[2]T3, Len()=0
+021453 T0003 LOG1 S2 Follower -> Follower, For T3->T3
+021453 T0003 LOG2 S2 Follower append logs: (2, 2]
+021454 T0003 DBUG S0 Match index after sort :[0 2 2] ,majority[1]=2
+021829 T0003 LOG1 S0 -> S1, Lost or crashed
+022366 T0003 DBUG S2 <- S0, Receive log, Prev=[2]T3, Len()=0
+022366 T0003 LOG1 S2 Follower -> Follower, For T3->T3
+022366 T0003 LOG2 S2 Follower append logs: (2, 2]
+022367 T0003 DBUG S0 Match index after sort :[0 2 2] ,majority[1]=2
+023148 T0002 LOG1 S1 -> S0, Lost or crashed
+023271 T0003 DBUG S2 <- S0, Receive log, Prev=[2]T3, Len()=0
+023271 T0003 LOG1 S2 Follower -> Follower, For T3->T3
+023271 T0003 LOG2 S2 Follower append logs: (2, 2]
+023272 T0003 DBUG S0 Match index after sort :[0 2 2] ,majority[1]=2
+023365 T0002 LOG1 S1 -> S2, Lost or crashed
+023386 T0003 LEAD S0 Leader accept log [3]T3
+024179 T0003 DBUG S2 <- S0, Receive log, Prev=[2]T3, Len()=1
+024179 T0003 LOG1 S2 Follower -> Follower, For T3->T3
+024179 T0003 LOG2 S2 Follower append logs: (2, 3]
+024180 T0003 DBUG S0 Match index after sort :[0 3 3] ,majority[1]=3
+024180 T0003 APLY S0 Apply log for [3,3]
+025087 T0003 DBUG S2 <- S0, Receive log, Prev=[3]T3, Len()=0
+025088 T0003 LOG1 S2 Follower -> Follower, For T3->T3
+025088 T0003 LOG2 S2 Follower append logs: (3, 3]
+025088 T0003 APLY S2 Follower update the commit index 2->3
+025088 T0003 APLY S2 Apply log for [3,3]
+025088 T0003 DBUG S0 Match index after sort :[0 3 3] ,majority[1]=3
+025387 T0002 LOG1 S1 -> S0, Lost or crashed
+025992 T0003 DBUG S2 <- S0, Receive log, Prev=[3]T3, Len()=0
+025992 T0003 LOG1 S2 Follower -> Follower, For T3->T3
+025992 T0003 LOG2 S2 Follower append logs: (3, 3]
+025993 T0003 DBUG S0 Match index after sort :[0 3 3] ,majority[1]=3
+026180 T0002 LOG1 S1 -> S2, Lost or crashed
+026334 T0002 LOG1 S1 -> S0, Lost or crashed
+026898 T0003 DBUG S2 <- S0, Receive log, Prev=[3]T3, Len()=0
+026898 T0003 LOG1 S2 Follower -> Follower, For T3->T3
+026898 T0003 LOG2 S2 Follower append logs: (3, 3]
+026899 T0003 DBUG S0 Match index after sort :[0 3 3] ,majority[1]=3
+027808 T0003 DBUG S2 <- S0, Receive log, Prev=[3]T3, Len()=0
+027808 T0003 LOG1 S2 Follower -> Follower, For T3->T3
+027808 T0003 LOG2 S2 Follower append logs: (3, 3]
+027809 T0003 DBUG S0 Match index after sort :[0 3 3] ,majority[1]=3
+028697 T0002 LOG1 S1 -> S2, Lost or crashed
+028712 T0003 DBUG S2 <- S0, Receive log, Prev=[3]T3, Len()=0
+028712 T0003 LOG1 S2 Follower -> Follower, For T3->T3
+028712 T0003 LOG2 S2 Follower append logs: (3, 3]
+028713 T0003 DBUG S0 Match index after sort :[0 3 3] ,majority[1]=3
+029623 T0003 DBUG S2 <- S0, Receive log, Prev=[3]T3, Len()=0
+029623 T0003 LOG1 S2 Follower -> Follower, For T3->T3
+029623 T0003 LOG2 S2 Follower append logs: (3, 3]
+029624 T0003 DBUG S0 Match index after sort :[0 3 3] ,majority[1]=3
+029995 T0003 LEAD S0 Leader accept log [4]T3
+029995 T0002 LEAD S1 Leader accept log [2]T2
+030016 T0003 LOG1 S0 -> S1, Lost or crashed
+030629 T0002 LOG1 S1 -> S0, Lost or crashed
+031651 T0002 LOG1 S1 -> S0, Lost or crashed
+033143 T0002 LOG1 S1 -> S2, Lost or crashed
+034937 T0003 LOG1 S0 -> S1, Lost or crashed
+035072 T0002 LOG1 S1 -> S2, Lost or crashed
+035326 T0002 LOG1 S1 -> S2, Lost or crashed
+036114 T0003 VOTE S2 Follower -> Candidate, For T3->T4
+036115 T0004 VOTE S2 Send vote RPC to 0:T4 Idx:3 LT:3
+036115 T0004 VOTE S2 Send vote RPC to 1:T4 Idx:3 LT:3
+036742 T0003 LOG1 S0 -> S1, Lost or crashed
+036844 T0003 LOG1 S0 -> S1, Lost or crashed
+036845 T0002 LOG1 S1 -> S0, Lost or crashed
+037231 T0002 LOG1 S1 -> S2, Lost or crashed
+037374 T0002 LOG1 S1 -> S0, Lost or crashed
+038942 T0002 LOG1 S1 -> S0, Lost or crashed
+039510 T0004 VOTE S2 Candidate -> Candidate, For T4->T5
+039510 T0005 VOTE S2 Send vote RPC to 0:T5 Idx:3 LT:3
+039510 T0005 VOTE S2 Send vote RPC to 1:T5 Idx:3 LT:3
+039583 T0002 LOG1 S1 -> S0, Lost or crashed
+039859 T0002 LOG1 S1 -> S0, Lost or crashed
+039931 T0002 LOG1 S1 -> S2, Lost or crashed
+040751 T0002 LOG1 S1 -> S0, Lost or crashed
+041072 T0002 LOG1 S1 -> S0, Lost or crashed
+041083 T0002 LOG1 S1 -> S2, Lost or crashed
+042009 T0002 LOG1 S1 -> S0, Lost or crashed
+042302 T0005 VOTE S2 Candidate -> Candidate, For T5->T6
+042302 T0006 VOTE S2 Send vote RPC to 0:T6 Idx:3 LT:3
+042302 T0006 VOTE S2 Send vote RPC to 1:T6 Idx:3 LT:3
+042915 T0002 LOG1 S1 -> S2, Lost or crashed
+042958 T0002 LOG1 S1 -> S0, Lost or crashed
+043779 T0006 VOTE S2 Candidate -> Candidate, For T6->T7
+043779 T0007 VOTE S2 Send vote RPC to 0:T7 Idx:3 LT:3
+043779 T0007 VOTE S2 Send vote RPC to 1:T7 Idx:3 LT:3
+043910 T0002 LOG1 S1 -> S2, Lost or crashed
+045171 T0003 LOG1 S0 -> S1, Lost or crashed
+045564 T0002 LOG1 S1 -> S0, Lost or crashed
+046032 T0002 LOG1 S1 -> S2, Lost or crashed
+046066 T0002 LOG1 S1 -> S0, Lost or crashed
+046118 T0003 LOG1 S0 -> S1, Lost or crashed
+046582 T0007 VOTE S2 Candidate -> Candidate, For T7->T8
+046583 T0008 VOTE S2 Send vote RPC to 0:T8 Idx:3 LT:3
+046584 T0008 VOTE S2 Send vote RPC to 1:T8 Idx:3 LT:3
+046628 T0003 LOG1 S0 -> S1, Lost or crashed
+047095 T0008 VOTE S2 Candidate -> Candidate, For T8->T9
+047096 T0009 VOTE S2 Send vote RPC to 0:T9 Idx:3 LT:3
+047096 T0009 VOTE S2 Send vote RPC to 1:T9 Idx:3 LT:3
+047499 T0002 LOG1 S1 -> S2, Lost or crashed
+047714 T0009 VOTE S2 Candidate -> Candidate, For T9->T10
+047715 T0010 VOTE S2 Send vote RPC to 0:T10 Idx:3 LT:3
+047715 T0010 VOTE S2 Send vote RPC to 1:T10 Idx:3 LT:3
+048325 T0002 LOG1 S1 -> S2, Lost or crashed
+048975 T0010 VOTE S2 Candidate -> Candidate, For T10->T11
+048975 T0011 VOTE S2 Send vote RPC to 0:T11 Idx:3 LT:3
+048976 T0011 VOTE S2 Send vote RPC to 1:T11 Idx:3 LT:3
+049603 T0002 LOG1 S1 -> S0, Lost or crashed
+  ... Passed --   5.0  3  220   51127    3
+PASS
+ok  	course/raft	5.004s

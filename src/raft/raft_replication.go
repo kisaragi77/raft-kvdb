@@ -1,11 +1,12 @@
 package raft
 
 import (
+	"sort"
 	"time"
 )
 
 const (
-	replicateInterval time.Duration = 200 * time.Millisecond
+	replicateInterval time.Duration = 90 * time.Millisecond
 )
 
 type LogEntry struct {
@@ -21,7 +22,7 @@ type AppendEntriesArgs struct {
 	PrevLogIndex int
 	PrevLogTerm  int
 	Entries      []LogEntry
-	LeaderCommit int
+	LeaderCommit int //update follower's commitIndex
 }
 type AppendEntriesReply struct {
 	Term    int
@@ -63,45 +64,75 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		return
 	}
 
+	reply.Success = true
+	//apply the leader logs to local
 	rf.log = append(rf.log[:args.PrevLogIndex+1], args.Entries...)
 	LOG(rf.me, rf.currentTerm, DLog2, "Follower append logs: (%d, %d]", args.PrevLogIndex, args.PrevLogIndex+len(args.Entries))
+	//update the commit index if needed and indicate the apply
+	if args.LeaderCommit > rf.commitIndex {
+		LOG(rf.me, rf.currentTerm, DApply, "Follower update the commit index %d->%d", rf.commitIndex, args.LeaderCommit)
+		rf.commitIndex = args.LeaderCommit
+		rf.applyCond.Signal()
 
-	reply.Success = true
+	}
 	rf.resetElectionTimeoutLocked()
+}
+
+func (rf *Raft) getMajorityIndexLocked() int {
+	tmpIndexes := make([]int, len(rf.matchIndex))
+	copy(tmpIndexes, rf.matchIndex)
+	sort.Ints(sort.IntSlice(tmpIndexes))
+	idx := (len(rf.peers) - 1) / 2
+	LOG(rf.me, rf.currentTerm, DDebug, "Match index after sort :%v ,majority[%d]=%d", tmpIndexes, idx, tmpIndexes[idx])
+	return tmpIndexes[idx]
 }
 
 func (rf *Raft) startReplication(term int) bool { //心跳/日志同步
 	replicateToPeer := func(peer int, args *AppendEntriesArgs) {
 		reply := &AppendEntriesReply{}
 		ok := rf.sendAppendEntries(peer, args, reply)
+
+		rf.mu.Lock()
+		defer rf.mu.Unlock()
+
 		if !ok {
 			LOG(rf.me, rf.currentTerm, DLog, "-> S%d, Lost or crashed", peer)
 			return
 		}
-		rf.mu.Lock()
-		defer rf.mu.Unlock()
 
 		if reply.Term > rf.currentTerm {
 			rf.becomeFollowerLocked(reply.Term)
 			return
 		}
 
+		//context
+		if rf.contextLostLocked(Leader, term) {
+			LOG(rf.me, rf.currentTerm, DLog, "-> %S%d, Context Lost,T%d->T%d:%d", peer, term, rf.currentTerm, rf.role)
+			return
+		}
+
 		if !reply.Success {
-			//日志一致性检查失败:定位第一个合法的位置?
+			//日志一致性检查失败:定位第一个合法的位置
 			idx := rf.nextIndex[peer] - 1
 			term := rf.log[idx].Term
-			for idx>0&&rf.log[idx].Term==term{
+			for idx > 0 && rf.log[idx].Term == term {
 				idx--
 			}
-			rf.nextIndex[peer] = idx+1
+			rf.nextIndex[peer] = idx + 1
 			//LOG TODO
 			return
 		}
 
 		rf.matchIndex[peer] = args.PrevLogIndex + len(args.Entries)
 		rf.nextIndex[peer] = rf.matchIndex[peer] + 1
-		//TODO : commit ID
 
+		//Commit Index Update
+		//选择所有peer的matchIndex的中位数作为Commit Index
+		majorityMatched := rf.getMajorityIndexLocked()
+		if majorityMatched > rf.commitIndex {
+			rf.commitIndex = majorityMatched
+			rf.applyCond.Signal()
+		}
 	}
 
 	rf.mu.Lock()
@@ -122,14 +153,12 @@ func (rf *Raft) startReplication(term int) bool { //心跳/日志同步
 		prevIdx := rf.nextIndex[peer] - 1 // 最后一条日志
 		prevTerm := rf.log[prevIdx].Term
 
-
-
 		args := &AppendEntriesArgs{
-			Term:     term,
-			LeaderId: rf.me,
-			PrevLogIndex:  prevIdx,
-			PrevLogTerm: prevTerm,
-			Entries: append([]LogEntry(nil),rf.log[prevIdx+1:]...),
+			Term:         term,
+			LeaderId:     rf.me,
+			PrevLogIndex: prevIdx,
+			PrevLogTerm:  prevTerm,
+			Entries:      append([]LogEntry(nil), rf.log[prevIdx+1:]...),
 			LeaderCommit: rf.commitIndex,
 		}
 
@@ -143,22 +172,22 @@ func (rf *Raft) startReplication(term int) bool { //心跳/日志同步
 
 func (rf *Raft) replicationTicker(term int) { // 日志同步Ticker的生命周期为一个term
 	for !rf.killed() {
-		contextRemained := rf.startReplication(term)
-		if !contextRemained {
-			break
+		ok := rf.startReplication(term)
+		if !ok {
+			return
 		}
 
 		time.Sleep(replicateInterval)
 	}
 }
 
-func (rf *Raft) isMoreUpToDateLocked(candidateIndex int, candidateTerm int) bool {
-	n := len(rf.log)
-	lastLogTerm, lastLogIndex := rf.log[n-1].Term, n-1
+func (rf *Raft) isMoreUpToDateLocked(candidateIndex, candidateTerm int) bool {
+	l := len(rf.log)
+	lastTerm, lastIndex := rf.log[l-1].Term, l-1
+	LOG(rf.me, rf.currentTerm, DVote, "Compare last log, Me: [%d]T%d, Candidate: [%d]T%d", lastIndex, lastTerm, candidateIndex, candidateTerm)
 
-	if lastLogTerm != candidateTerm {
-		return lastLogTerm > candidateTerm
+	if lastTerm != candidateTerm {
+		return lastTerm > candidateTerm
 	}
-
-	return lastLogIndex > candidateIndex
+	return lastIndex > candidateIndex
 }
